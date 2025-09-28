@@ -39,8 +39,8 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
   String? _locationError;
   bool _locationServiceDisabled = false;
   bool _locationDeniedForever = false;
-  bool _followUser = false;
-  bool _isDriveMode = false;
+  bool _followUser = true;
+  bool _isDriveMode = true;
   bool _isPrefetchingTiles = false;
 
   @override
@@ -55,6 +55,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
     _controller = ParkingMapController(repository: _repository)..loadSpots();
     _tileProvider = CachedNetworkTileProvider(maxAge: const Duration(days: 5));
 
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _initLocationTracking();
     });
@@ -254,7 +255,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
             heroTag: 'followFab',
             tooltip: _followUser || _isDriveMode
                 ? 'Dejar de seguirte'
-                : 'Seguir tu posición',
+                : 'Seguir tu posici\u00f3n',
             backgroundColor: _followUser || _isDriveMode
                 ? Theme.of(context).colorScheme.primary
                 : null,
@@ -272,7 +273,9 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
             icon: Icon(
               _isDriveMode ? Icons.stop_circle_outlined : Icons.directions_car,
             ),
-            label: Text(_isDriveMode ? 'Salir conducción' : 'Modo conducción'),
+            label: Text(
+              _isDriveMode ? 'Salir conducci\u00f3n' : 'Modo conducci\u00f3n',
+            ),
           ),
         ],
       ),
@@ -335,7 +338,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Gestión de mapas',
+                  'Gesti\u00f3n de mapas',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 12),
@@ -343,7 +346,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
                   leading: const Icon(Icons.cloud_download),
                   title: const Text('Descargar zona visible'),
                   subtitle: const Text(
-                    'Guarda temporalmente los mosaicos actuales para usarlos sin conexión.',
+                    'Guarda temporalmente los mosaicos actuales para usarlos sin conexi\u00f3n.',
                   ),
                   trailing: _isPrefetchingTiles
                       ? const SizedBox(
@@ -362,7 +365,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.delete_sweep),
-                  title: const Text('Vaciar caché'),
+                  title: const Text('Vaciar cach\u00e9'),
                   subtitle: const Text(
                     'Elimina los mosaicos almacenados para liberar espacio.',
                   ),
@@ -373,7 +376,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  'Los mosaicos se conservan hasta 7 días y un máximo aproximado de 2.000 elementos.',
+                  'Los mosaicos se conservan hasta 7 d\u00edas y un m\u00e1ximo aproximado de 2.000 elementos.',
                   style: TextStyle(fontSize: 12, color: Colors.black54),
                 ),
               ],
@@ -407,7 +410,9 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Se almacenaron ${uris.length} mosaicos en caché.'),
+          content: Text(
+            'Se almacenaron ${uris.length} mosaicos en cach\u00e9.',
+          ),
         ),
       );
     } catch (_) {
@@ -425,9 +430,9 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
   Future<void> _clearTileCache() async {
     await _tileProvider.clear();
     if (!mounted) return;
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(const SnackBar(content: Text('Caché de mapas vaciada.')));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('cach\u00e9 de mapas vaciada.')),
+    );
   }
 
   Iterable<Uri> _tileUrisForBounds(LatLngBounds bounds, int zoom) sync* {
@@ -479,7 +484,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _locationError = 'No se pudo obtener tu ubicación actual.';
+        _locationError = 'No se pudo obtener tu ubicaci\u00f3n actual.';
       });
     }
 
@@ -505,7 +510,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
           onError: (_) {
             if (!mounted) return;
             setState(() {
-              _locationError = 'Perdimos la señal GPS.';
+              _locationError = 'Perdimos la se\u00f1al GPS.';
             });
           },
         );
@@ -534,7 +539,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
         _locationServiceDisabled = false;
         _locationDeniedForever = false;
         _locationError =
-            'Concede permiso de ubicación para seguir tu posición.';
+            'Concede permiso de ubicaci\u00f3n para seguir tu posici\u00f3n.';
       });
       return false;
     }
@@ -544,7 +549,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
       setState(() {
         _locationServiceDisabled = false;
         _locationDeniedForever = true;
-        _locationError = 'Permite el acceso a la ubicación desde ajustes.';
+        _locationError = 'Permite el acceso a la ubicaci\u00f3n desde ajustes.';
       });
       return false;
     }
@@ -844,7 +849,7 @@ class _DriveModeBanner extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const Text(
-                    'Modo conducción activo',
+                    'Modo conducci\u00f3n activo',
                     style: TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.w600,
@@ -888,7 +893,7 @@ class _DriveAssistCard extends StatelessWidget {
         currentSpot?.name ?? 'Mantén la vista en la carretera';
     final String subtitleText =
         currentSpot?.address ??
-        'Usa el modo conducción para recibir avisos rápidos y centrar el mapa en tu posición.';
+        'Usa el modo conducci\u00f3n para recibir avisos rápidos y centrar el mapa en tu posici\u00f3n.';
 
     return Material(
       color: Colors.black.withValues(alpha: 0.75),
