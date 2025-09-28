@@ -1,11 +1,11 @@
 {
-    "name": "aparcamalaga",
-    "short_name": "aparcamalaga",
+    "name": "PMR Málaga",
+    "short_name": "PMR Málaga",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#1F6DB5",
     "theme_color": "#1F6DB5",
-    "description": "A new Flutter project.",
+    "description": "Localizador de plazas PMR en Málaga",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

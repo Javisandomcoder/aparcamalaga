@@ -8,7 +8,7 @@ class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Aparca Málaga PMR',
+      title: 'PMR Málaga',
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF006494)),
         useMaterial3: true,
@@ -18,3 +18,4 @@ class App extends StatelessWidget {
     );
   }
 }
+
