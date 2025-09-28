@@ -25,8 +25,9 @@ class ParkingMapPage extends StatefulWidget {
 class _ParkingMapPageState extends State<ParkingMapPage> {
   static const _initialCenter = LatLng(36.7213, -4.4217);
   static const _initialZoom = 13.0;
-  static const _markerSize = 20.0;
-  static const _markerSelectedSize = 26.0;
+  static const _markerSize = 16.0;
+  static const _markerSelectedSize = 20.0;
+  static const _markerDriveScale = 1.5;
 
   late final MapController _mapController;
   late final ParkingRemoteDataSource _remoteDataSource;
@@ -131,28 +132,29 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
           userAgentPackageName: 'com.example.aparcamalaga',
         ),
         MarkerLayer(
-          markers: spots
-              .map(
-                (spot) => Marker(
-                  point: LatLng(spot.latitude, spot.longitude),
-                  width: spot.id == _controller.selectedSpot?.id
-                      ? _markerSelectedSize
-                      : _markerSize,
-                  height: spot.id == _controller.selectedSpot?.id
-                      ? _markerSelectedSize
-                      : _markerSize,
-                  alignment: Alignment.center,
-                  child: _ParkingMarker(
-                    spot: spot,
-                    isSelected: spot.id == _controller.selectedSpot?.id,
-                    onTap: () => _onMarkerTap(spot),
-                    size: spot.id == _controller.selectedSpot?.id
-                        ? _markerSelectedSize
-                        : _markerSize,
-                  ),
-                ),
-              )
-              .toList(),
+          markers: spots.map((spot) {
+            final bool isSelected =
+                spot.id == _controller.selectedSpot?.id;
+            final double baseSize =
+                isSelected ? _markerSelectedSize : _markerSize;
+            final double size =
+                _isDriveMode ? baseSize * _markerDriveScale : baseSize;
+            final double markerExtent =
+                _markerExtent(size, spot.spotCount);
+
+            return Marker(
+              point: LatLng(spot.latitude, spot.longitude),
+              width: markerExtent,
+              height: markerExtent,
+              alignment: Alignment.center,
+              child: _ParkingMarker(
+                spot: spot,
+                isSelected: isSelected,
+                onTap: () => _onMarkerTap(spot),
+                size: size,
+              ),
+            );
+          }).toList(),
         ),
         if (_userLocation != null)
           MarkerLayer(
@@ -230,9 +232,15 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
   }
 
   Widget _buildFloatingButtons(BuildContext context) {
-    return Positioned(
+    final mediaPadding = MediaQuery.of(context).padding.bottom;
+    const driveModeOffset = 200.0;
+    final bottomOffset = (_isDriveMode ? driveModeOffset : 16.0) + mediaPadding;
+
+    return AnimatedPositioned(
+      duration: const Duration(milliseconds: 250),
+      curve: Curves.easeOut,
       right: 16,
-      bottom: 16,
+      bottom: bottomOffset,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -255,7 +263,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
             heroTag: 'followFab',
             tooltip: _followUser || _isDriveMode
                 ? 'Dejar de seguirte'
-                : 'Seguir tu posici\u00f3n',
+                : 'Seguir tu posición',
             backgroundColor: _followUser || _isDriveMode
                 ? Theme.of(context).colorScheme.primary
                 : null,
@@ -266,17 +274,15 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
                   : Icons.gps_not_fixed,
             ),
           ),
-          const SizedBox(height: 12),
-          FloatingActionButton.extended(
-            heroTag: 'driveModeFab',
-            onPressed: _toggleDriveMode,
-            icon: Icon(
-              _isDriveMode ? Icons.stop_circle_outlined : Icons.directions_car,
+          if (!_isDriveMode) ...[
+            const SizedBox(height: 12),
+            FloatingActionButton.small(
+              heroTag: 'driveModeFabShortcut',
+              tooltip: 'Entrar en modo conducción',
+              onPressed: _toggleDriveMode,
+              child: const Icon(Icons.directions_car_filled),
             ),
-            label: Text(
-              _isDriveMode ? 'Salir conducci\u00f3n' : 'Modo conducci\u00f3n',
-            ),
-          ),
+          ],
         ],
       ),
     );
@@ -338,7 +344,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Gesti\u00f3n de mapas',
+                  'Gestión de mapas',
                   style: Theme.of(context).textTheme.titleMedium,
                 ),
                 const SizedBox(height: 12),
@@ -346,7 +352,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
                   leading: const Icon(Icons.cloud_download),
                   title: const Text('Descargar zona visible'),
                   subtitle: const Text(
-                    'Guarda temporalmente los mosaicos actuales para usarlos sin conexi\u00f3n.',
+                    'Guarda temporalmente los mosaicos actuales para usarlos sin conexión.',
                   ),
                   trailing: _isPrefetchingTiles
                       ? const SizedBox(
@@ -365,7 +371,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
                 ),
                 ListTile(
                   leading: const Icon(Icons.delete_sweep),
-                  title: const Text('Vaciar cach\u00e9'),
+                  title: const Text('Vaciar caché'),
                   subtitle: const Text(
                     'Elimina los mosaicos almacenados para liberar espacio.',
                   ),
@@ -376,7 +382,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
                 ),
                 const SizedBox(height: 4),
                 const Text(
-                  'Los mosaicos se conservan hasta 7 d\u00edas y un m\u00e1ximo aproximado de 2.000 elementos.',
+                  'Los mosaicos se conservan hasta 7 días y un máximo aproximado de 2.000 elementos.',
                   style: TextStyle(fontSize: 12, color: Colors.black54),
                 ),
               ],
@@ -411,7 +417,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            'Se almacenaron ${uris.length} mosaicos en cach\u00e9.',
+            'Se almacenaron ${uris.length} mosaicos en caché.',
           ),
         ),
       );
@@ -431,7 +437,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
     await _tileProvider.clear();
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('cach\u00e9 de mapas vaciada.')),
+      const SnackBar(content: Text('Caché de mapas vaciada.')),
     );
   }
 
@@ -484,7 +490,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
     } catch (_) {
       if (!mounted) return;
       setState(() {
-        _locationError = 'No se pudo obtener tu ubicaci\u00f3n actual.';
+        _locationError = 'No se pudo obtener tu ubicación actual.';
       });
     }
 
@@ -539,7 +545,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
         _locationServiceDisabled = false;
         _locationDeniedForever = false;
         _locationError =
-            'Concede permiso de ubicaci\u00f3n para seguir tu posici\u00f3n.';
+            'Concede permiso de ubicación para seguir tu posición.';
       });
       return false;
     }
@@ -549,7 +555,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
       setState(() {
         _locationServiceDisabled = false;
         _locationDeniedForever = true;
-        _locationError = 'Permite el acceso a la ubicaci\u00f3n desde ajustes.';
+        _locationError = 'Permite el acceso a la ubicación desde ajustes.';
       });
       return false;
     }
@@ -656,6 +662,11 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
   }
 }
 
+double _markerExtent(double baseSize, int spotCount) {
+  final double multiplier = spotCount > 1 ? 1.45 : 1.2;
+  return baseSize * multiplier;
+}
+
 class _ParkingMarker extends StatelessWidget {
   const _ParkingMarker({
     required this.spot,
@@ -671,43 +682,119 @@ class _ParkingMarker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final Color color = isSelected
-        ? const Color(0xFF006494)
-        : const Color(0xFF00A6FB);
-    final double fontSize = (size * 0.45).clamp(8, 13).toDouble();
+    final bool hasMultipleSpots = spot.spotCount > 1;
+    final double extent = _markerExtent(size, spot.spotCount);
+    final IconData iconData = spot.hasAccessibleAccess
+        ? Icons.accessible_forward
+        : Icons.local_parking;
+    final List<Color> gradientColors = isSelected
+        ? const [Color(0xFF0D47A1), Color(0xFF00A6FB)]
+        : const [Color(0xFF0277BD), Color(0xFF29B6F6)];
+    final double iconSize = (size * 0.75).clamp(10, 22).toDouble();
+
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          color: color,
-          shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.18),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+      child: SizedBox(
+        width: extent,
+        height: extent,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              curve: Curves.easeOut,
+              width: size,
+              height: size,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors: gradientColors,
+                ),
+                border: Border.all(
+                  color: Colors.white,
+                  width: size * (isSelected ? 0.16 : 0.12),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(
+                      alpha: isSelected ? 0.35 : 0.25,
+                    ),
+                    blurRadius: isSelected ? 14 : 9,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Center(
+                child: Icon(
+                  iconData,
+                  color: Colors.white,
+                  size: iconSize,
+                ),
+              ),
             ),
+            if (hasMultipleSpots)
+              Positioned(
+                right: -size * 0.2,
+                bottom: -size * 0.2,
+                child: _MarkerBadge(
+                  count: spot.spotCount,
+                  emphasize: isSelected,
+                  parentSize: size,
+                ),
+              ),
           ],
-        ),
-        alignment: Alignment.center,
-        padding: EdgeInsets.all(size * 0.18),
-        child: Text(
-          '',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w600,
-            fontSize: fontSize,
-          ),
-          textAlign: TextAlign.center,
         ),
       ),
     );
   }
 }
 
+class _MarkerBadge extends StatelessWidget {
+  const _MarkerBadge({
+    required this.count,
+    required this.emphasize,
+    required this.parentSize,
+  });
+
+  final int count;
+  final bool emphasize;
+  final double parentSize;
+
+  @override
+  Widget build(BuildContext context) {
+    final double fontSize = (parentSize * 0.32).clamp(10, 16).toDouble();
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      padding: EdgeInsets.symmetric(
+        horizontal: parentSize * 0.2,
+        vertical: parentSize * 0.12,
+      ),
+      decoration: BoxDecoration(
+        color: emphasize ? const Color(0xFFFFD54F) : Colors.white,
+        borderRadius: BorderRadius.circular(parentSize),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.25),
+            blurRadius: emphasize ? 8 : 6,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Text(
+        '$count',
+        style: TextStyle(
+          fontWeight: FontWeight.w700,
+          fontSize: fontSize,
+          color: emphasize ? const Color(0xFF3E2723) : Colors.black87,
+        ),
+      ),
+    );
+  }
+}
 class _UserLocationMarker extends StatelessWidget {
   const _UserLocationMarker({required this.isFollowing});
 
@@ -893,7 +980,7 @@ class _DriveAssistCard extends StatelessWidget {
         currentSpot?.name ?? 'Mantén la vista en la carretera';
     final String subtitleText =
         currentSpot?.address ??
-        'Usa el modo conducci\u00f3n para recibir avisos rápidos y centrar el mapa en tu posici\u00f3n.';
+        'Usa el modo conducci\u00f3n para recibir avisos rápidos y centrar el mapa en tu posición.';
 
     return Material(
       color: Colors.black.withValues(alpha: 0.75),
@@ -1018,3 +1105,6 @@ class _ErrorBanner extends StatelessWidget {
     );
   }
 }
+
+
+
