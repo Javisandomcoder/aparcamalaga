@@ -46,13 +46,28 @@ Aplicación Flutter para encontrar y consultar plazas PMR en la ciudad de Málag
 
 Durante el modo conducción, el mapa se vuelve oscuro, se oculta la app bar y se muestra una tarjeta asistente; cualquier gesto manual sobre el mapa desactiva temporalmente el seguimiento hasta que se pulse de nuevo el botón de centrado.
 
+## Licencia
+
+Este proyecto se distribuye bajo los términos de la [GNU General Public License v3.0](LICENSE).
+
+Si redistribuyes binarios debes ofrecer también el código fuente completo y mantener esta misma licencia para los trabajos derivados.
+
+### Avisos de terceros
+
+El proyecto hace uso de los siguientes paquetes con licencias compatibles:
+
+- `flutter_map` (BSD-3-Clause)
+- `flutter_map_tile_caching` (GPL-3.0)
+- `http` (BSD-3-Clause estilo Dart)
+- `latlong2` (Apache-2.0)
+- `shared_preferences`, `url_launcher` (BSD-3-Clause – Flutter)
+- `geolocator`, `permission_handler`, `flutter_cache_manager`, `flutter_launcher_icons`, `cupertino_icons` (MIT)
+
+Consulta los archivos de licencia incluidos en el repositorio de cada paquete para más detalles.
+
 ## Estructura destacada
 
 - `lib/features/parking/` – Lógica de dominio, datos y presentación del módulo de aparcamientos.
 - `lib/app/app.dart` – Punto de arranque de la interfaz Material.
 - `assets/icons/` – Recursos base para los iconos multiplataforma.
 - `web/icons/` / `android/app/src/main/res/` / `ios/Runner/Assets.xcassets/` – Iconos generados automáticamente.
-
-## Licencia
-
-Este proyecto se publica para uso interno. Consulta con el responsable del repositorio antes de redistribuirlo o publicarlo.
