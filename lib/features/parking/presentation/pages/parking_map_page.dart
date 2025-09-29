@@ -36,6 +36,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
   late final CachedNetworkTileProvider _tileProvider;
 
   StreamSubscription<Position>? _positionSubscription;
+  StreamSubscription<MapEvent>? _mapEventSubscription;
   LatLng? _userLocation;
   String? _locationError;
   bool _locationServiceDisabled = false;
@@ -43,11 +44,14 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
   bool _followUser = true;
   bool _isDriveMode = true;
   bool _isPrefetchingTiles = false;
+  bool _isProgrammaticMove = false;
 
   @override
   void initState() {
     super.initState();
     _mapController = MapController();
+    _mapEventSubscription =
+        _mapController.mapEventStream.listen(_handleMapEvent);
     _remoteDataSource = ParkingRemoteDataSource();
     _repository = ParkingRepositoryImpl(
       remoteDataSource: _remoteDataSource,
@@ -64,6 +68,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
 
   @override
   void dispose() {
+    _mapEventSubscription?.cancel();
     _positionSubscription?.cancel();
     _controller.dispose();
     _tileProvider.dispose();
@@ -165,7 +170,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
                 height: 22,
                 alignment: Alignment.center,
                 child: _UserLocationMarker(
-                  isFollowing: _followUser || _isDriveMode,
+                  isFollowing: _followUser,
                 ),
               ),
             ],
@@ -261,17 +266,15 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
           const SizedBox(height: 12),
           FloatingActionButton.small(
             heroTag: 'followFab',
-            tooltip: _followUser || _isDriveMode
+            tooltip: _followUser
                 ? 'Dejar de seguirte'
                 : 'Seguir tu posición',
-            backgroundColor: _followUser || _isDriveMode
+            backgroundColor: _followUser
                 ? Theme.of(context).colorScheme.primary
                 : null,
             onPressed: _toggleFollowUser,
             child: Icon(
-              _followUser || _isDriveMode
-                  ? Icons.gps_fixed
-                  : Icons.gps_not_fixed,
+              _followUser ? Icons.gps_fixed : Icons.gps_not_fixed,
             ),
           ),
           if (!_isDriveMode) ...[
@@ -484,7 +487,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
       setState(() {
         _userLocation = current;
       });
-      if (_followUser || _isDriveMode) {
+      if (_followUser && _userLocation != null) {
         _moveCamera(current, zoom: _isDriveMode ? 17 : null);
       }
     } catch (_) {
@@ -509,7 +512,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
               _userLocation = current;
               _locationError = null;
             });
-            if (_followUser || _isDriveMode) {
+            if (_followUser) {
               _moveCamera(current, zoom: _isDriveMode ? 17 : null);
             }
           },
@@ -569,6 +572,43 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
     return true;
   }
 
+  void _handleMapEvent(MapEvent event) {
+    if (_isProgrammaticMove) {
+      final bool isProgrammaticSource =
+          event.source == MapEventSource.mapController ||
+          event.source == MapEventSource.fitCamera ||
+          event.source == MapEventSource.custom;
+
+      _isProgrammaticMove = false;
+
+      if (isProgrammaticSource) {
+        return;
+      }
+    }
+
+    if (!_followUser) {
+      return;
+    }
+
+    const userGestureSources = <MapEventSource>{
+      MapEventSource.dragStart,
+      MapEventSource.onDrag,
+      MapEventSource.dragEnd,
+      MapEventSource.multiFingerGestureStart,
+      MapEventSource.onMultiFinger,
+      MapEventSource.multiFingerEnd,
+      MapEventSource.doubleTap,
+      MapEventSource.doubleTapHold,
+      MapEventSource.scrollWheel,
+      MapEventSource.cursorKeyboardRotation,
+    };
+
+    if (userGestureSources.contains(event.source)) {
+      setState(() {
+        _followUser = false;
+      });
+    }
+  }
   void _handleLocationAction() {
     if (_locationServiceDisabled) {
       Geolocator.openLocationSettings();
@@ -591,7 +631,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
       _followUser = !_followUser;
     });
 
-    if ((_followUser || _isDriveMode) && _userLocation != null) {
+    if (_followUser && _userLocation != null) {
       _moveCamera(_userLocation!, zoom: _isDriveMode ? 17 : null);
     }
   }
@@ -636,6 +676,7 @@ class _ParkingMapPageState extends State<ParkingMapPage> {
 
   void _moveCamera(LatLng target, {double? zoom}) {
     final double currentZoom = _mapController.camera.zoom;
+    _isProgrammaticMove = true;
     _mapController.move(target, zoom ?? currentZoom);
   }
 
@@ -1105,6 +1146,3 @@ class _ErrorBanner extends StatelessWidget {
     );
   }
 }
-
-
-
