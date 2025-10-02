@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../features/parking/presentation/pages/parking_map_page.dart';
+import '../features/parking/presentation/pages/parking_map_page_refactored.dart';
 
 class App extends StatelessWidget {
   const App({super.key});
@@ -14,7 +14,7 @@ class App extends StatelessWidget {
         useMaterial3: true,
         scaffoldBackgroundColor: const Color(0xFFF7F9FC),
       ),
-      home: const ParkingMapPage(),
+      home: const ParkingMapPageRefactored(),
     );
   }
 }
