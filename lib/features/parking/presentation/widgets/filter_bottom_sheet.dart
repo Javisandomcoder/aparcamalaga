@@ -110,7 +110,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        'El mapa no se centrará automáticamente en modo conducción por seguridad',
+                        'En modo conducción el mapa no se moverá automáticamente a la dirección buscada por seguridad',
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.orange.shade900,
