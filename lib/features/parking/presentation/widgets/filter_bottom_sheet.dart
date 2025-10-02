@@ -18,7 +18,6 @@ class FilterBottomSheet extends ConsumerStatefulWidget {
 
 class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   late TextEditingController _searchController;
-  late bool _showOnlyAccessible;
   String? _selectedOwnership;
   int? _minSpotCount;
 
@@ -27,7 +26,6 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
     super.initState();
     final currentFilter = ref.read(parkingFilterProvider);
     _searchController = TextEditingController(text: currentFilter.searchQuery);
-    _showOnlyAccessible = currentFilter.showOnlyAccessible;
     _selectedOwnership = currentFilter.ownership;
     _minSpotCount = currentFilter.minSpotCount;
   }
@@ -41,7 +39,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   void _applyFilters() {
     ref.read(parkingFilterProvider.notifier).state = ParkingFilter(
       searchQuery: _searchController.text,
-      showOnlyAccessible: _showOnlyAccessible,
+      showOnlyAccessible: false,
       ownership: _selectedOwnership,
       minSpotCount: _minSpotCount,
     );
@@ -52,7 +50,6 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   void _clearFilters() {
     setState(() {
       _searchController.clear();
-      _showOnlyAccessible = false;
       _selectedOwnership = null;
       _minSpotCount = null;
     });
@@ -130,17 +127,6 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
               ),
             ),
             const SizedBox(height: 16),
-            CheckboxListTile(
-              value: _showOnlyAccessible,
-              onChanged: (value) {
-                setState(() {
-                  _showOnlyAccessible = value ?? false;
-                });
-              },
-              title: const Text('Solo con acceso adaptado'),
-              secondary: const Icon(Icons.accessible_forward),
-            ),
-            const SizedBox(height: 8),
             if (ownerships.isNotEmpty) ...[
               DropdownButtonFormField<String?>(
                 initialValue: _selectedOwnership,
