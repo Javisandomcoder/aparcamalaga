@@ -63,6 +63,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
   @override
   Widget build(BuildContext context) {
     final ownerships = ref.watch(availableOwnershipsProvider);
+    final isDriveMode = ref.watch(driveModeProvider);
 
     return SafeArea(
       child: Padding(
@@ -90,6 +91,35 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
               ],
             ),
             const SizedBox(height: 16),
+            if (isDriveMode)
+              Container(
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.only(bottom: 16),
+                decoration: BoxDecoration(
+                  color: Colors.orange.shade50,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange.shade200),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.info_outline,
+                      color: Colors.orange.shade700,
+                      size: 20,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        'El mapa no se centrará automáticamente en modo conducción por seguridad',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.orange.shade900,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             TextField(
               controller: _searchController,
               decoration: const InputDecoration(
