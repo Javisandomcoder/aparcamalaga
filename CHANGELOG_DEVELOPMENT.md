@@ -27,6 +27,10 @@
 - Filtro por titularidad (Municipal, Privada, etc.)
 - Filtro por número mínimo de plazas
 - Indicador visual cuando hay filtros activos
+- **Auto-centrado del mapa** en los resultados filtrados:
+  - Si hay 1 resultado: centra y hace zoom en esa plaza
+  - Si hay múltiples: ajusta el mapa para mostrar todas las plazas filtradas
+  - No interfiere con el modo conducción
 
 ### 4. **Sistema de favoritos** ✅
 - Persistencia local con `SharedPreferences`

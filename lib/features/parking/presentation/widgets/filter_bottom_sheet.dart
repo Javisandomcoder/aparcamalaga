@@ -5,7 +5,12 @@ import '../../domain/entities/parking_filter.dart';
 import '../providers/parking_providers.dart';
 
 class FilterBottomSheet extends ConsumerStatefulWidget {
-  const FilterBottomSheet({super.key});
+  const FilterBottomSheet({
+    super.key,
+    this.onFiltersApplied,
+  });
+
+  final VoidCallback? onFiltersApplied;
 
   @override
   ConsumerState<FilterBottomSheet> createState() => _FilterBottomSheetState();
@@ -41,6 +46,7 @@ class _FilterBottomSheetState extends ConsumerState<FilterBottomSheet> {
       minSpotCount: _minSpotCount,
     );
     Navigator.pop(context);
+    widget.onFiltersApplied?.call();
   }
 
   void _clearFilters() {

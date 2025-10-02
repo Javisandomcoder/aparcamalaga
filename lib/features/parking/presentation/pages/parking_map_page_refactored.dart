@@ -383,8 +383,63 @@ class _ParkingMapPageRefactoredState
       context: context,
       showDragHandle: true,
       isScrollControlled: true,
-      builder: (context) => const FilterBottomSheet(),
+      builder: (context) => FilterBottomSheet(
+        onFiltersApplied: _centerOnFilteredResults,
+      ),
     );
+  }
+
+  void _centerOnFilteredResults() {
+    final isDriveMode = ref.read(driveModeProvider);
+
+    // No auto-centrar en modo conducción
+    if (isDriveMode) {
+      return;
+    }
+
+    final filteredSpotsAsync = ref.read(filteredParkingSpotsProvider);
+
+    filteredSpotsAsync.whenData((spots) {
+      if (spots.isEmpty) {
+        return;
+      }
+
+      // Si solo hay un resultado, centrarse en él
+      if (spots.length == 1) {
+        final spot = spots.first;
+        _moveCamera(LatLng(spot.latitude, spot.longitude), zoom: 17);
+        return;
+      }
+
+      // Si hay múltiples resultados, calcular los bounds
+      double minLat = spots.first.latitude;
+      double maxLat = spots.first.latitude;
+      double minLng = spots.first.longitude;
+      double maxLng = spots.first.longitude;
+
+      for (final spot in spots) {
+        if (spot.latitude < minLat) minLat = spot.latitude;
+        if (spot.latitude > maxLat) maxLat = spot.latitude;
+        if (spot.longitude < minLng) minLng = spot.longitude;
+        if (spot.longitude > maxLng) maxLng = spot.longitude;
+      }
+
+      final bounds = LatLngBounds(
+        LatLng(minLat, minLng),
+        LatLng(maxLat, maxLng),
+      );
+
+      // Centrar el mapa en los bounds con padding
+      _mapController.fitCamera(
+        CameraFit.bounds(
+          bounds: bounds,
+          padding: const EdgeInsets.all(50),
+        ),
+      );
+
+      // Desactivar seguimiento de usuario
+      ref.read(followUserProvider.notifier).state = false;
+    });
   }
 
   Future<void> _showMapOptionsSheet() async {
