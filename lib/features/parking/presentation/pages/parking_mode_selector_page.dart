@@ -199,7 +199,7 @@ class _ParkingModeSelectorPageState extends State<ParkingModeSelectorPage>
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Encuentra parkings de movilidad reducida',
+                    'Encuentra aparcamientos de movilidad reducida',
                     style: theme.textTheme.bodyLarge?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                     ),
@@ -213,7 +213,7 @@ class _ParkingModeSelectorPageState extends State<ParkingModeSelectorPage>
                     child: _ModeOptionCard(
                       icon: Icons.search_rounded,
                       title: 'Buscar dirección',
-                      description: 'Encuentra parkings en una ubicación específica',
+                      description: 'Encuentra aparcamientos en una ubicación específica',
                       color: theme.colorScheme.primary,
                       onTap: _showAddressSearchDialog,
                     ),
@@ -226,7 +226,7 @@ class _ParkingModeSelectorPageState extends State<ParkingModeSelectorPage>
                     child: _ModeOptionCard(
                       icon: Icons.my_location_rounded,
                       title: 'Cerca de mí',
-                      description: 'Busca parkings en tu ubicación actual',
+                      description: 'Busca aparcamientos en tu ubicación actual',
                       color: theme.colorScheme.secondary,
                       onTap: () => _navigateToMap(
                         const ParkingModeConfig(mode: ParkingMode.nearMe),
